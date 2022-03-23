@@ -1,0 +1,150 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  creationTimestamp: '2022-03-23T14:16:55Z'
+  generation: 5
+  managedFields:
+    - apiVersion: tekton.dev/v1beta1
+      fieldsType: FieldsV1
+      fieldsV1:
+        'f:spec':
+          .: {}
+          'f:finally': {}
+          'f:params': {}
+          'f:resources': {}
+          'f:tasks': {}
+          'f:workspaces': {}
+      manager: Mozilla
+      operation: Update
+      time: '2022-03-23T14:16:55Z'
+  name: dev-pipeline
+  namespace: pipeline
+  resourceVersion: '421697'
+  uid: 1a1d6b81-ec8d-4070-982e-4486683c1c37
+spec:
+  params:
+    - default: dev
+      name: namespace
+      type: string
+    - default: getting-started
+      name: foldername
+      type: string
+  tasks:
+    - name: git-clone
+      params:
+        - name: url
+          value: 'https://github.com/likhia/quarkus-quickstarts.git'
+        - name: revision
+          value: main
+        - name: submodules
+          value: 'true'
+        - name: depth
+          value: '1'
+        - name: sslVerify
+          value: 'true'
+        - name: deleteExisting
+          value: 'true'
+        - name: verbose
+          value: 'true'
+        - name: gitInitImage
+          value: >-
+            registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b1598a980f17d5f5d3d8a4b11ab4f5184677f7f17ad302baa36bd3c1
+        - name: userHome
+          value: /tekton/home
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: dev-workspace
+    - name: build-config
+      params:
+        - name: SCRIPT
+          value: oc apply -f $(params.foldername)/dev-build-config.yaml
+        - name: VERSION
+          value: latest
+      runAfter:
+        - git-clone
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+    - name: createimage
+      params:
+        - name: SCRIPT
+          value: oc apply -f $(params.foldername)/dev-is.yaml
+        - name: VERSION
+          value: latest
+      runAfter:
+        - build-config
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+    - name: startbuild
+      params:
+        - name: SCRIPT
+          value: >-
+            oc start-build hello-world --from-dir=$(params.foldername)/ --follow
+            -n $(params.namespace)
+        - name: VERSION
+          value: latest
+      runAfter:
+        - createimage
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+    - name: deployment
+      params:
+        - name: SCRIPT
+          value: oc apply -f $(params.foldername)/dev-deployment.yaml
+        - name: VERSION
+          value: latest
+      runAfter:
+        - startbuild
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+    - name: service
+      params:
+        - name: SCRIPT
+          value: oc apply -f  $(params.foldername)/dev-service.yaml
+        - name: VERSION
+          value: latest
+      runAfter:
+        - deployment
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+    - name: route
+      params:
+        - name: SCRIPT
+          value: oc apply -f $(params.foldername)/dev-route.yaml
+        - name: VERSION
+          value: latest
+      runAfter:
+        - service
+      taskRef:
+        kind: ClusterTask
+        name: openshift-client
+      workspaces:
+        - name: manifest-dir
+          workspace: dev-workspace
+  workspaces:
+    - name: dev-workspace
+      optional: false
+  resources: []
+  finally: []
