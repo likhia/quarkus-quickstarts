@@ -1,0 +1,26 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewBuild
+  name: hello-world
+  namespace: dev
+  labels:
+    build: hello-world
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'hello-world:latest'
+  resources: {}
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'openjdk-11-rhel8:1.0'
+  postCommit: {}
+  source:
+    type: Binary
+    binary: {}

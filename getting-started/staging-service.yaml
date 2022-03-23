@@ -1,0 +1,20 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: hello-world
+  namespace: dev
+  labels:
+    app: hello-world
+    app.kubernetes.io/component: hello-world
+    app.kubernetes.io/instance: hello-world
+  annotations:
+    openshift.io/generated-by: OpenShiftNewApp
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+  selector:
+    deployment: hello-world

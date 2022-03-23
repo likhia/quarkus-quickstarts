@@ -1,0 +1,38 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  annotations:
+    image.openshift.io/triggers: >-
+      [{"from":{"kind":"ImageStreamTag","name":"hello-world:latest","namespace":"dev"},"fieldPath":"spec.template.spec.containers[?(@.name==\"hello-world\")].image"}]
+    openshift.io/generated-by: OpenShiftNewApp
+  name: hello-world
+  namespace: dev
+  labels:
+    app: hello-world
+    app.kubernetes.io/component: hello-world
+    app.kubernetes.io/instance: hello-world
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: hello-world
+  template:
+    metadata:
+      labels:
+        deployment: hello-world
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+    spec:
+      containers:
+        - name: hello-world
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/dev/hello-world:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  

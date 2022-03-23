@@ -1,0 +1,12 @@
+kind: ImageStream
+apiVersion: image.openshift.io/v1
+metadata:
+  annotations:
+    openshift.io/generated-by: OpenShiftNewBuild
+  name: hello-world
+  namespace: dev
+  labels:
+    build: hello-world
+spec:
+  lookupPolicy:
+    local: false

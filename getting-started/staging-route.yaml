@@ -1,0 +1,19 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hello-world
+  namespace: dev
+  labels:
+    app: hello-world
+    app.kubernetes.io/component: hello-world
+    app.kubernetes.io/instance: hello-world
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  to:
+    kind: Service
+    name: hello-world
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
