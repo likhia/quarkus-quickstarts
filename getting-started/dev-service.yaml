@@ -2,7 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: hello-world
-  namespace: staging
+  namespace: dev
   labels:
     app: hello-world
     app.kubernetes.io/component: hello-world
